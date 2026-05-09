@@ -1,0 +1,372 @@
+{
+  "name": "bakery_business",
+  "nodes": [
+    {
+      "id": "n1",
+      "name": "Анализ рынка и БП",
+      "shape": "diamond",
+      "x": -465,
+      "y": 0,
+      "w": 160,
+      "h": 50,
+      "fill": "var(--node-fill)",
+      "textColor": "var(--text-primary)",
+      "note": "Изучить конкурентов, написать бизнес-план",
+      "todos": [
+        {
+          "text": "Сбор данных о конкурентах",
+          "done": true
+        },
+        {
+          "text": "Расчёт юнит-экономики",
+          "done": false
+        }
+      ],
+      "highlightColors": [
+        "#ffd93d"
+      ],
+      "subgraphId": null,
+      "ganttStart": 0,
+      "ganttDuration": 14,
+      "ganttExpanded": false
+    },
+    {
+      "id": "n2",
+      "name": "Поиск помещения",
+      "shape": "rect",
+      "x": -465,
+      "y": 130,
+      "w": 140,
+      "h": 50,
+      "fill": "var(--node-fill)",
+      "textColor": "var(--text-primary)",
+      "note": "Минимум 60 кв.м., вытяжка",
+      "todos": [
+        {
+          "text": "Заключить договор аренды",
+          "done": false
+        }
+      ],
+      "highlightColors": [],
+      "subgraphId": null,
+      "ganttStart": 14,
+      "ganttDuration": 20,
+      "ganttExpanded": false
+    },
+    {
+      "id": "n3",
+      "name": "Ремонт",
+      "shape": "rect",
+      "x": 16.465760021663414,
+      "y": -31.55186286952194,
+      "w": 140,
+      "h": 50,
+      "fill": "var(--node-fill)",
+      "textColor": "var(--text-primary)",
+      "note": "Подготовить технологическую зону",
+      "todos": [],
+      "highlightColors": [],
+      "subgraphId": "sg1",
+      "ganttStart": 34,
+      "ganttDuration": 40,
+      "ganttExpanded": false
+    },
+    {
+      "id": "n4",
+      "name": "Оборудование",
+      "shape": "rect",
+      "x": 16.465760021663414,
+      "y": 138.44813713047807,
+      "w": 140,
+      "h": 50,
+      "fill": "var(--node-fill)",
+      "textColor": "var(--text-primary)",
+      "note": "Закупка печей, витрин, кассы",
+      "todos": [
+        {
+          "text": "Конвекционная печь",
+          "done": true
+        },
+        {
+          "text": "Витрина холодильная",
+          "done": true
+        }
+      ],
+      "highlightColors": [],
+      "subgraphId": "sg1",
+      "ganttStart": 34,
+      "ganttDuration": 30,
+      "ganttExpanded": false
+    },
+    {
+      "id": "n5",
+      "name": "Лицензии 📝",
+      "shape": "round",
+      "x": 11.465760021663414,
+      "y": 263.448137130478,
+      "w": 140,
+      "h": 50,
+      "fill": "var(--node-fill)",
+      "textColor": "var(--text-primary)",
+      "note": "СЭС, пожарные",
+      "todos": [],
+      "highlightColors": [
+        "#ff6b6b"
+      ],
+      "subgraphId": "sg1",
+      "ganttStart": 34,
+      "ganttDuration": 30,
+      "ganttExpanded": false
+    },
+    {
+      "id": "n6",
+      "name": "Найм персонала",
+      "shape": "rect",
+      "x": 346.46576002166296,
+      "y": -31.55186286952194,
+      "w": 140,
+      "h": 50,
+      "fill": "var(--node-fill)",
+      "textColor": "var(--text-primary)",
+      "note": "2 пекаря, 2 кассира",
+      "todos": [],
+      "highlightColors": [],
+      "subgraphId": "sg1",
+      "ganttStart": 60,
+      "ganttDuration": 14,
+      "ganttExpanded": false
+    },
+    {
+      "id": "n7",
+      "name": "Реклама",
+      "shape": "stadium",
+      "x": 346.46576002166296,
+      "y": 313.4481371304778,
+      "w": 140,
+      "h": 50,
+      "fill": "var(--node-fill)",
+      "textColor": "var(--text-primary)",
+      "note": "Таргет, листовки, соцсети",
+      "todos": [],
+      "highlightColors": [
+        "#4d96ff"
+      ],
+      "subgraphId": "sg1",
+      "ganttStart": 60,
+      "ganttDuration": 20,
+      "ganttExpanded": false
+    },
+    {
+      "id": "n8",
+      "name": "Тестовая выпечка",
+      "shape": "circle",
+      "x": 351.46576002166296,
+      "y": 158.44813713047813,
+      "w": 140,
+      "h": 50,
+      "fill": "var(--node-fill)",
+      "textColor": "var(--text-primary)",
+      "note": "Отработка техкарт",
+      "todos": [],
+      "highlightColors": [],
+      "subgraphId": "sg1",
+      "ganttStart": 74,
+      "ganttDuration": 7,
+      "ganttExpanded": false
+    },
+    {
+      "id": "n9",
+      "name": "ОТКРЫТИЕ 🎊",
+      "shape": "hexagon",
+      "x": 760,
+      "y": 0,
+      "w": 160,
+      "h": 60,
+      "fill": "var(--node-fill)",
+      "textColor": "var(--text-primary)",
+      "note": "Праздничное открытие!",
+      "todos": [],
+      "highlightColors": [
+        "#6bcb77"
+      ],
+      "subgraphId": null,
+      "ganttStart": 81,
+      "ganttDuration": 2,
+      "ganttExpanded": false
+    },
+    {
+      "id": "n10",
+      "name": "1-й месяц работы",
+      "shape": "parallelogram",
+      "x": 1110,
+      "y": 0,
+      "w": 160,
+      "h": 50,
+      "fill": "var(--node-fill)",
+      "textColor": "var(--text-primary)",
+      "note": "Анализ популярности позиций",
+      "todos": [],
+      "highlightColors": [],
+      "subgraphId": null,
+      "ganttStart": 83,
+      "ganttDuration": 30,
+      "ganttExpanded": false
+    },
+    {
+      "id": "n11",
+      "name": "2-й месяц работы",
+      "shape": "parallelogram",
+      "x": 1400,
+      "y": 0,
+      "w": 160,
+      "h": 50,
+      "fill": "var(--node-fill)",
+      "textColor": "var(--text-primary)",
+      "note": "Выход на операционный ноль",
+      "todos": [],
+      "highlightColors": [],
+      "subgraphId": null,
+      "ganttStart": 113,
+      "ganttDuration": 30,
+      "ganttExpanded": false
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "from": "n1",
+      "to": "n2",
+      "arrowStart": "none",
+      "arrowEnd": "arrow",
+      "color": "#5a6a8a",
+      "highlightColors": []
+    },
+    {
+      "id": "e2",
+      "from": "n2",
+      "to": "n3",
+      "arrowStart": "none",
+      "arrowEnd": "arrow",
+      "color": "#5a6a8a",
+      "highlightColors": []
+    },
+    {
+      "id": "e3",
+      "from": "n2",
+      "to": "n4",
+      "arrowStart": "none",
+      "arrowEnd": "arrow",
+      "color": "#5a6a8a",
+      "highlightColors": []
+    },
+    {
+      "id": "e4",
+      "from": "n2",
+      "to": "n5",
+      "arrowStart": "none",
+      "arrowEnd": "arrow",
+      "color": "#5a6a8a",
+      "highlightColors": []
+    },
+    {
+      "id": "e5",
+      "from": "n3",
+      "to": "n8",
+      "arrowStart": "none",
+      "arrowEnd": "arrow",
+      "color": "#5a6a8a",
+      "highlightColors": []
+    },
+    {
+      "id": "e6",
+      "from": "n4",
+      "to": "n8",
+      "arrowStart": "none",
+      "arrowEnd": "arrow",
+      "color": "#5a6a8a",
+      "highlightColors": []
+    },
+    {
+      "id": "e7",
+      "from": "n3",
+      "to": "n6",
+      "arrowStart": "none",
+      "arrowEnd": "arrow",
+      "color": "#5a6a8a",
+      "highlightColors": []
+    },
+    {
+      "id": "e8",
+      "from": "n8",
+      "to": "n9",
+      "arrowStart": "none",
+      "arrowEnd": "arrow",
+      "color": "#5a6a8a",
+      "highlightColors": []
+    },
+    {
+      "id": "e9",
+      "from": "n6",
+      "to": "n9",
+      "arrowStart": "none",
+      "arrowEnd": "arrow",
+      "color": "#5a6a8a",
+      "highlightColors": []
+    },
+    {
+      "id": "e10",
+      "from": "n7",
+      "to": "n9",
+      "arrowStart": "none",
+      "arrowEnd": "arrow",
+      "color": "#5a6a8a",
+      "highlightColors": []
+    },
+    {
+      "id": "e11",
+      "from": "n9",
+      "to": "n10",
+      "arrowStart": "none",
+      "arrowEnd": "arrow",
+      "color": "#5a6a8a",
+      "highlightColors": []
+    },
+    {
+      "id": "e12",
+      "from": "n10",
+      "to": "n11",
+      "arrowStart": "none",
+      "arrowEnd": "arrow",
+      "color": "#5a6a8a",
+      "highlightColors": []
+    }
+  ],
+  "subgraphs": [
+    {
+      "id": "sg1",
+      "name": "Подготовка к открытию",
+      "nodeIds": [
+        "n3",
+        "n4",
+        "n5",
+        "n6",
+        "n7",
+        "n8"
+      ],
+      "collapsed": false,
+      "highlightColors": []
+    }
+  ],
+  "nextId": 12,
+  "graphTransform": {
+    "x": 596.1845058047338,
+    "y": 224.69239748331168,
+    "scale": 0.663260893390273
+  },
+  "ganttConfig": {
+    "startDate": "2026-06-01",
+    "endDate": "2026-11-30",
+    "zoom": 0.8847360000000003,
+    "scrollY": 0
+  }
+}
