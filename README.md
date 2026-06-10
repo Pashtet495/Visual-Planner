@@ -1,3 +1,10 @@
+Попробовать программу не скачивая файлы можно через GitHub Pages:
+
+https://Pashtet495.github.io/Visual-Planner/Visual-Planner%20v.0.4.0.html
+
+
+
+
 Изменения в версии v.0.4.0
 
 
