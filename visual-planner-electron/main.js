@@ -1,7 +1,7 @@
 // ============================================================
 // Visual Planner - Electron main process
 // ============================================================
-const { app, BrowserWindow, ipcMain, dialog, shell, protocol, Menu } = require("electron");
+const { app, BrowserWindow, ipcMain, dialog, shell, protocol, Menu, session } = require("electron");
 const path = require("path");
 const fs = require("fs");
 const fsp = fs.promises;
@@ -291,6 +291,73 @@ ipcMain.handle("fs:exists", async (event, filePath) => {
   }
 });
 
+// Save an exported image (SVG text or base64-encoded PNG) via the native dialog
+ipcMain.handle("image:save", async (event, { data, encoding, suggestedName } = {}) => {
+  if (typeof data !== "string" || !data.length) {
+    return { ok: false, canceled: false, error: "Empty image data" };
+  }
+  const win = BrowserWindow.fromWebContents(event.sender);
+  const name = suggestedName || "export.svg";
+  const ext = path.extname(name).toLowerCase();
+  const filters =
+    ext === ".png"
+      ? [
+          { name: "PNG image (*.png)", extensions: ["png"] },
+          { name: "All files (*.*)", extensions: ["*"] },
+        ]
+      : ext === ".svg"
+        ? [
+            { name: "SVG image (*.svg)", extensions: ["svg"] },
+            { name: "All files (*.*)", extensions: ["*"] },
+          ]
+        : [
+            { name: "All files (*.*)", extensions: ["*"] },
+          ];
+  const options = {
+    title: "Save image",
+    defaultPath: name,
+    filters,
+  };
+  const result = win ? await dialog.showSaveDialog(win, options) : await dialog.showSaveDialog(options);
+  if (result.canceled || !result.filePath) {
+    return { ok: false, canceled: true };
+  }
+  try {
+    const buffer =
+      encoding === "base64" ? Buffer.from(data, "base64") : Buffer.from(data, "utf8");
+    await fsp.writeFile(result.filePath, buffer);
+    return {
+      ok: true,
+      canceled: false,
+      path: result.filePath,
+      name: path.basename(result.filePath),
+    };
+  } catch (err) {
+    return { ok: false, canceled: false, error: err.message };
+  }
+});
+
+// Return the combined application CSS (styles.css + attachments.css).
+// The renderer injects it as a <style> element so that exported SVG
+// keeps its original styling.
+ipcMain.handle("app:read-css", async () => {
+  try {
+    const files = ["styles.css", "attachments.css"];
+    const parts = [];
+    for (const f of files) {
+      const p = path.join(__dirname, "app", f);
+      try {
+        parts.push(await fsp.readFile(p, "utf8"));
+      } catch (e) {
+        // file missing - skip
+      }
+    }
+    return { ok: true, css: parts.join("\n\n") };
+  } catch (err) {
+    return { ok: false, css: "", error: err.message };
+  }
+});
+
 // ============================================================
 // vpfile:// protocol - serves local files for the internal viewer
 // ============================================================
@@ -349,6 +416,47 @@ function registerAttachmentProtocol() {
 }
 
 // ============================================================
+// Download fallback: any remaining browser-style download (blob: /
+// data: URL anchors) is routed through a native "Save As" dialog
+// instead of Electron's default download flow.
+// ============================================================
+function installDownloadInterceptor() {
+  const defaultSession = session.defaultSession;
+  defaultSession.on("will-download", (event, item, webContents) => {
+    const fileName = item.getFilename() || "download";
+    const ext = path.extname(fileName).toLowerCase();
+    let filters = [{ name: "All files (*.*)", extensions: ["*"] }];
+    if (ext === ".svg") {
+      filters = [
+        { name: "SVG image (*.svg)", extensions: ["svg"] },
+        { name: "All files (*.*)", extensions: ["*"] },
+      ];
+    } else if (ext === ".png") {
+      filters = [
+        { name: "PNG image (*.png)", extensions: ["png"] },
+        { name: "All files (*.*)", extensions: ["*"] },
+      ];
+    } else if (ext === ".json") {
+      filters = [
+        { name: "Visual Planner workspace (*.json)", extensions: ["json"] },
+        { name: "All files (*.*)", extensions: ["*"] },
+      ];
+    }
+    const win = BrowserWindow.fromWebContents(webContents);
+    const filePath = dialog.showSaveDialogSync(win, {
+      title: "Save file",
+      defaultPath: fileName,
+      filters,
+    });
+    if (!filePath) {
+      event.preventDefault(); // user canceled the download
+      return;
+    }
+    item.setSavePath(filePath);
+  });
+}
+
+// ============================================================
 // App lifecycle
 // ============================================================
 const gotLock = app.requestSingleInstanceLock();
@@ -364,6 +472,7 @@ if (!gotLock) {
 
   app.whenReady().then(() => {
     registerAttachmentProtocol();
+    installDownloadInterceptor();
     buildMenu();
     createWindow();
 

@@ -38,6 +38,31 @@
     saveState();
   }
 
+  // ---------- Inline application styles for SVG export ----------
+  // In the original single-file HTML the whole CSS lived in a <style> block,
+  // and the SVG export embedded it into the standalone file. In the Electron
+  // port the CSS moved to external files, so we inject their content as a
+  // <style> element again - getSvgString() picks it up during export.
+  (function injectExportStyles() {
+    try {
+      if (!document.getElementById("vp-inline-export-styles")) {
+        native
+          .readAppCss()
+          .then((res) => {
+            if (res && res.ok && res.css && res.css.trim()) {
+              const style = document.createElement("style");
+              style.id = "vp-inline-export-styles";
+              style.textContent = res.css;
+              document.head.appendChild(style);
+            }
+          })
+          .catch(() => {});
+      }
+    } catch (e) {
+      /* non-critical */
+    }
+  })();
+
   // ---------- Save workspace ----------
   window.saveWorkspaceToDisk = async function (forceSaveAs) {
     const w = ws();

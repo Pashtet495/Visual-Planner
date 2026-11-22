@@ -5722,9 +5722,18 @@
           document.documentElement.getAttribute("data-theme") || "light",
         );
 
-        const style = document.createElement("style");
-        style.textContent = document.querySelector("style").textContent;
-        clone.insertBefore(style, clone.firstChild);
+        // Collect all inline <style> blocks. Since the Electron port the CSS
+        // lives in external styles.css / attachments.css; electron-integration.js
+        // injects their content as a <style> element so that the exported SVG
+        // keeps its styling. Guard against the case when no styles exist.
+        const styleText = Array.from(document.querySelectorAll("style"))
+          .map((s) => s.textContent || "")
+          .join("\n");
+        if (styleText.trim()) {
+          const style = document.createElement("style");
+          style.textContent = styleText;
+          clone.insertBefore(style, clone.firstChild);
+        }
 
         const w = ws();
         let minX = Infinity,
@@ -5763,7 +5772,13 @@
         bgRect.setAttribute("y", vY);
         bgRect.setAttribute("width", vWidth);
         bgRect.setAttribute("height", vHeight);
-        bgRect.setAttribute("fill", "var(--bg-primary)");
+        // Resolve the CSS variable to a concrete color so the background
+        // renders correctly even in viewers without var() support
+        const bgResolved =
+          getComputedStyle(document.documentElement)
+            .getPropertyValue("--bg-primary")
+            .trim() || "#f5f6fa";
+        bgRect.setAttribute("fill", bgResolved);
         clone.insertBefore(bgRect, clone.firstChild);
 
         const vp = clone.querySelector("#graph-viewport");
@@ -5791,52 +5806,131 @@
         return result;
       }
 
-      function exportGraphSVG() {
-        withLightExport(() => {
-          const svgString = getSvgString(document.getElementById("graph-svg"));
-          const blob = new Blob([svgString], {
-            type: "image/svg+xml;charset=utf-8",
-          });
+      // ---------- Native save helpers (Electron) with browser fallback ----------
+      function sanitizeExportName(name) {
+        return String(name || "scheme")
+          .replace(/[\\/:*?"<>|]/g, "")
+          .trim() || "scheme";
+      }
+
+      // Save exported image data through the native save dialog.
+      // encoding: "utf8" (SVG text) or "base64" (binary PNG).
+      async function saveExportedImage(data, suggestedName, encoding) {
+        suggestedName = sanitizeExportName(suggestedName);
+        if (window.vpNative && window.vpNative.saveImage) {
+          const res = await window.vpNative.saveImage(data, suggestedName, encoding);
+          if (res.canceled) return;
+          if (res.ok) {
+            showToast("Сохранено: " + res.name);
+          } else {
+            showToast("Ошибка сохранения: " + (res.error || "неизвестная ошибка"));
+          }
+          return;
+        }
+        // Browser fallback - classic download
+        if (encoding === "base64") {
+          const a = document.createElement("a");
+          a.download = suggestedName;
+          a.href = "data:image/png;base64," + data;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+        } else {
+          const blob = new Blob([data], { type: "image/svg+xml;charset=utf-8" });
           const url = URL.createObjectURL(blob);
           const a = document.createElement("a");
           a.href = url;
-          a.download = ws().name + "_граф.svg";
+          a.download = suggestedName;
+          document.body.appendChild(a);
           a.click();
+          document.body.removeChild(a);
           setTimeout(() => URL.revokeObjectURL(url), 100);
-        });
+        }
       }
 
-      function exportGraphPNG() {
-        withLightExport(() => {
-          const svgString = getSvgString(document.getElementById("graph-svg"));
-          const canvas = document.createElement("canvas");
-          const ctx = canvas.getContext("2d");
-          const img = new Image();
-          const blob = new Blob([svgString], {
-            type: "image/svg+xml;charset=utf-8",
-          });
+      // Rasterize an SVG string to PNG canvas -> base64 (no huge data: URLs)
+      function rasterizeSvgToCanvas(svgString, width, height) {
+        return new Promise((resolve, reject) => {
+          const blob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
           const url = URL.createObjectURL(blob);
+          const img = new Image();
           img.onload = function () {
-            canvas.width = img.width;
-            canvas.height = img.height;
-            ctx.drawImage(img, 0, 0);
+            try {
+              const canvas = document.createElement("canvas");
+              canvas.width = width || img.width || 1;
+              canvas.height = height || img.height || 1;
+              const ctx = canvas.getContext("2d");
+              ctx.drawImage(img, 0, 0);
+              URL.revokeObjectURL(url);
+              resolve(canvas);
+            } catch (err) {
+              URL.revokeObjectURL(url);
+              reject(err);
+            }
+          };
+          img.onerror = function () {
             URL.revokeObjectURL(url);
-            const a = document.createElement("a");
-            a.download = ws().name + "_граф.png";
-            a.href = canvas.toDataURL("image/png");
-            a.click();
+            reject(new Error("Не удалось отрисовать SVG для PNG"));
           };
           img.src = url;
         });
       }
 
+      function canvasToPngBase64(canvas) {
+        return new Promise((resolve, reject) => {
+          canvas.toBlob((blob) => {
+            if (!blob) {
+              reject(new Error("Пустой холст"));
+              return;
+            }
+            const reader = new FileReader();
+            reader.onload = () => resolve(String(reader.result).split(",")[1] || "");
+            reader.onerror = () => reject(new Error("Не удалось прочитать данные холста"));
+            reader.readAsDataURL(blob);
+          }, "image/png");
+        });
+      }
+
+      async function exportGraphSVG() {
+        withLightExport(() => {
+          const svgNode = document.getElementById("graph-svg");
+          if (!svgNode) return;
+          try {
+            const svgString = getSvgString(svgNode);
+            saveExportedImage(svgString, ws().name + "_граф.svg", "utf8");
+          } catch (err) {
+            showToast("Ошибка экспорта: " + err.message);
+          }
+        });
+      }
+
+      async function exportGraphPNG() {
+        withLightExport(() => {
+          const svgNode = document.getElementById("graph-svg");
+          if (!svgNode) return;
+          try {
+            const svgString = getSvgString(svgNode);
+            rasterizeSvgToCanvas(svgString)
+              .then((canvas) => canvasToPngBase64(canvas))
+              .then((b64) => saveExportedImage(b64, ws().name + "_граф.png", "base64"))
+              .catch((err) => showToast("Ошибка экспорта: " + err.message));
+          } catch (err) {
+            showToast("Ошибка экспорта: " + err.message);
+          }
+        });
+      }
+
       function exportGanttPNG() {
         withLightExport(() => {
-          const canvas = document.getElementById("gantt-canvas");
-          const a = document.createElement("a");
-          a.download = ws().name + "_гант.png";
-          a.href = canvas.toDataURL("image/png");
-          a.click();
+          try {
+            const canvas = document.getElementById("gantt-canvas");
+            if (!canvas) return;
+            canvasToPngBase64(canvas)
+              .then((b64) => saveExportedImage(b64, ws().name + "_гант.png", "base64"))
+              .catch((err) => showToast("Ошибка экспорта: " + err.message));
+          } catch (err) {
+            showToast("Ошибка экспорта: " + err.message);
+          }
         });
       }
 
@@ -9807,13 +9901,7 @@ function initAiChat() {
       svgParts.push('</svg>');
 
       const svgString = svgParts.join('\n');
-      const blob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = ws().name + "_гант.svg";
-      a.click();
-      URL.revokeObjectURL(url);
+      saveExportedImage(svgString, ws().name + "_гант.svg", "utf8");
     }
 
     // --- importWorkspaceData ---
@@ -11058,15 +11146,13 @@ function initAiChat() {
       if (wasHidden) switchInterface("kanban");
       
       withLightExport(() => {
-        const { svgString } = _generateKanbanSVG();
-        if (!svgString) return;
-        const blob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = ws().name + "_канбан.svg";
-        a.click();
-        setTimeout(() => URL.revokeObjectURL(url), 100);
+        try {
+          const { svgString } = _generateKanbanSVG();
+          if (!svgString) return;
+          saveExportedImage(svgString, ws().name + "_канбан.svg", "utf8");
+        } catch (err) {
+          showToast("Ошибка экспорта: " + err.message);
+        }
       });
       
       if (wasHidden) switchInterface("graph");
@@ -11078,25 +11164,16 @@ function initAiChat() {
       if (wasHidden) switchInterface("kanban");
       
       withLightExport(() => {
-        const { svgString, width, height } = _generateKanbanSVG();
-        if (!svgString) return;
-        
-        const blob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
-        const url = URL.createObjectURL(blob);
-        const img = new Image();
-        img.onload = function () {
-          const canvas = document.createElement("canvas");
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext("2d");
-          ctx.drawImage(img, 0, 0);
-          URL.revokeObjectURL(url);
-          const a = document.createElement("a");
-          a.download = ws().name + "_канбан.png";
-          a.href = canvas.toDataURL("image/png");
-          a.click();
-        };
-        img.src = url;
+        try {
+          const { svgString, width, height } = _generateKanbanSVG();
+          if (!svgString) return;
+          rasterizeSvgToCanvas(svgString, width, height)
+            .then((canvas) => canvasToPngBase64(canvas))
+            .then((b64) => saveExportedImage(b64, ws().name + "_канбан.png", "base64"))
+            .catch((err) => showToast("Ошибка экспорта: " + err.message));
+        } catch (err) {
+          showToast("Ошибка экспорта: " + err.message);
+        }
       });
       
       if (wasHidden) switchInterface("graph");

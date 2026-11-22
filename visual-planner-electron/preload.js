@@ -18,6 +18,14 @@ contextBridge.exposeInMainWorld("vpNative", {
   revealInFolder: (filePath) => ipcRenderer.invoke("shell:reveal-in-folder", filePath),
   fileExists: (filePath) => ipcRenderer.invoke("fs:exists", filePath),
 
+  // ---- Image export (PNG / SVG) via the native save dialog ----
+  // data: SVG text (encoding "utf8") or base64 string (encoding "base64")
+  saveImage: (data, suggestedName, encoding) =>
+    ipcRenderer.invoke("image:save", { data, suggestedName, encoding: encoding || "utf8" }),
+
+  // Combined application CSS (styles.css + attachments.css) for SVG export
+  readAppCss: () => ipcRenderer.invoke("app:read-css"),
+
   // Resolve the real absolute path of a File object dropped from Explorer
   pathForFile: (file) => {
     try {

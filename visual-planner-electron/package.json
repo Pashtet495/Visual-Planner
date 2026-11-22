@@ -1,7 +1,7 @@
 {
   "name": "visual-planner",
   "productName": "Visual Planner",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Visual Planner - desktop version based on Electron",
   "main": "main.js",
   "author": "Visual Planner",
