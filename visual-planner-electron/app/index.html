@@ -1,0 +1,1007 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Визуальный Планировщик v0.5.0 (Electron)</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="attachments.css" />
+  </head>
+  <body>
+    <div id="app">
+      <!-- HEADER -->
+      <div id="header">
+        <button id="btn-new-ws" title="Новое рабочее пространство">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 1.5h6l3.5 3.5v9.5a1 1 0 0 1-1 1h-8.5a1 1 0 0 1-1-1v-13a1 1 0 0 1 1-1z"/><path d="M9 1.5v4h3.5"/><line x1="5" y1="8.5" x2="9" y2="8.5"/><line x1="5" y1="11" x2="9" y2="11"/></svg>
+        </button>
+        <button id="btn-save-ws" title="Сохранить в файл (Ctrl+S)">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 2.5a1 1 0 0 1 1-1h7.5l2.5 2.5v9.5a1 1 0 0 1-1 1h-9a1 1 0 0 1-1-1z"/><rect x="5" y="1.5" width="5" height="3" rx="0.5"/><rect x="4.5" y="8.5" width="6" height="4.5" rx="0.5"/></svg>
+        </button>
+        <button id="btn-save-as-ws" title="Сохранить как... (Ctrl+Shift+S)" style="display:none;">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 2.5a1 1 0 0 1 1-1h7.5l2.5 2.5v9.5a1 1 0 0 1-1 1h-9a1 1 0 0 1-1-1z"/><rect x="5" y="1.5" width="5" height="3" rx="0.5"/><rect x="4.5" y="8.5" width="6" height="4.5" rx="0.5"/><line x1="8" y1="9.5" x2="8" y2="12"/><line x1="6.5" y1="10.5" x2="9.5" y2="10.5"/></svg>
+        </button>
+        <button id="btn-load-ws" title="Загрузить из файла">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3a1 1 0 0 1 1-1h3.5l2 2h4.5a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1h-10a1 1 0 0 1-1-1z"/><line x1="8" y1="7" x2="8" y2="11.5"/><polyline points="6,9.5 8,7 10,9.5"/></svg>
+        </button>
+        <div
+          style="
+            width: 1px;
+            height: 20px;
+            background: var(--border-color);
+            margin: 0 4px;
+          "
+        ></div>
+        <button id="btn-undo" title="Отменить (Ctrl+Z)" disabled>←</button>
+        <button id="btn-redo" title="Повторить (Ctrl+Y)" disabled>→</button>
+        <button id="btn-json-editor" title="JSON редактор">{ }</button>
+        <div
+          style="
+            width: 1px;
+            height: 20px;
+            background: var(--border-color);
+            margin: 0 4px;
+          "
+        ></div>
+        <div id="search-container" style="position:relative;display:flex;align-items:center;">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position:absolute;left:6px;top:5px;pointer-events:none;z-index:1;"><circle cx="7" cy="7" r="4.5"/><line x1="10.2" y1="10.2" x2="14" y2="14"/></svg>
+          <input id="search-input" type="text" placeholder="Поиск блоков..." title="Поиск по названию, примечанию и задачам" style="background:var(--bg-input);border:1px solid var(--border-color);color:var(--text-primary);padding:3px 6px 3px 24px;border-radius:4px;font-size:12px;width:160px;outline:none;" />
+          <button id="search-clear" title="Очистить поиск" style="display:none;position:absolute;right:2px;top:2px;background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:14px;padding:2px 4px;line-height:1;">✕</button>
+          <button id="search-replace-toggle" title="Найти и заменить" style="margin-left:2px;background:var(--bg-tertiary);border:1px solid var(--border-color);color:var(--text-secondary);cursor:pointer;font-size:11px;padding:3px 5px;border-radius:3px;line-height:1;">⇄</button>
+          <div id="search-replace-panel" style="display:none;position:absolute;top:28px;left:0;background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:4px;padding:6px 8px;z-index:200;gap:4px;flex-direction:column;min-width:240px;box-shadow:0 4px 12px var(--shadow);">
+            <div style="display:flex;align-items:center;gap:4px;">
+              <input id="replace-input" type="text" placeholder="Заменить на..." style="flex:1;background:var(--bg-input);border:1px solid var(--border-color);color:var(--text-primary);padding:3px 6px;border-radius:3px;font-size:12px;outline:none;" />
+              <button id="btn-replace-one" title="Заменить" style="background:var(--accent-bg);border:1px solid var(--border-color);color:var(--text-primary);cursor:pointer;font-size:10px;padding:3px 8px;border-radius:3px;white-space:nowrap;">Заменить</button>
+              <button id="btn-replace-all" title="Заменить все" style="background:var(--accent-bg);border:1px solid var(--border-color);color:var(--text-primary);cursor:pointer;font-size:10px;padding:3px 8px;border-radius:3px;white-space:nowrap;">Все</button>
+            </div>
+            <div id="replace-count" style="font-size:10px;color:var(--text-muted);margin-top:3px;"></div>
+          </div>
+        </div>
+        <button id="btn-add-subgraph" onclick="addSubgraph()">⊞ Сабграф</button>
+        <label title="Автоматически добавлять блоки в сабграф при перетаскивании" style="display:inline-flex;align-items:center;gap:3px;font-size:11px;color:var(--text-muted);cursor:pointer;user-select:none;white-space:nowrap;">
+          <input type="checkbox" id="auto-subgraph-cb" style="cursor:pointer;width:auto;margin:0;" />
+          <span>авто</span>
+        </label>
+        <button id="btn-import-subgraph"
+          onclick="document.getElementById('import-subgraph-input').click()"
+          title="Вставить другую рабочую область"
+        >
+          📥 Из файла
+        </button>
+        <div
+          style="
+            width: 1px;
+            height: 20px;
+            background: var(--border-color);
+            margin: 0 4px;
+          "
+        ></div>
+        <div id="interface-switcher" style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-secondary);">
+          <span class="switcher-label" data-mode="graph" onclick="switchInterface('graph')" style="cursor:pointer;">Граф</span>
+          <div class="toggle-switch" onclick="switchInterface(state.interfaceMode === 'graph' ? 'kanban' : 'graph')">
+            <div class="toggle-thumb" id="interface-toggle-thumb"></div>
+          </div>
+          <span class="switcher-label" data-mode="kanban" onclick="switchInterface('kanban')" style="cursor:pointer;">Канбан</span>
+        </div>
+        <div
+          style="
+            width: 1px;
+            height: 20px;
+            background: var(--border-color);
+            margin: 0 4px;
+          "
+        ></div>
+        <div class="export-dropdown">
+          <button class="export-dropdown-btn" onclick="toggleExportDropdown(event)">📦 Экспорт ▾</button>
+          <div class="export-dropdown-menu" id="export-dropdown-menu">
+            <div class="edm-item" onclick="exportGraphSVG()">🖼️ Граф (SVG)</div>
+            <div class="edm-item" onclick="exportGraphPNG()">📷 Граф (PNG)</div>
+            <div class="edm-item" onclick="exportGanttPNG()">📊 Гант (PNG)</div>
+            <div class="edm-item" onclick="exportGanttSVG()">📊 Гант (SVG)</div>
+            <div class="edm-item" onclick="exportKanbanSVG()">📋 Канбан (SVG)</div>
+            <div class="edm-item" onclick="exportKanbanPNG()">📋 Канбан (PNG)</div>
+          </div>
+        </div>
+        <div
+          style="
+            width: 1px;
+            height: 20px;
+            background: var(--border-color);
+            margin: 0 4px;
+          "
+        ></div>
+        <div id="tabs-container"></div>
+        <button id="theme-toggle" title="Переключить тему">🌙</button>
+      </div>
+
+      <!-- MAIN -->
+      <div id="main-area">
+        <!-- LEFT PANEL (AI CHAT) -->
+        <div id="left-panel-wrapper">
+          <div id="left-panel-resize"></div>
+          <div id="left-panel">
+            <div id="chat-header">
+              <h3>AI Ассистент</h3>
+              <div style="display:flex;gap:4px;">
+                <button id="btn-clear-chat" title="Очистить чат">🗑</button>
+                <button id="btn-ai-settings" title="Настройки подключения к нейросети">⚙</button>
+              </div>
+            </div>
+            <div id="chat-messages"></div>
+            <div id="chat-input-area">
+              <textarea id="chat-input" placeholder="Введите сообщение..." rows="1"></textarea>
+              <button id="chat-send-btn" title="Отправить">▶</button>
+            </div>
+          </div>
+        </div>
+        <button id="left-panel-collapse-btn" onclick="toggleLeftPanel()" title="Свернуть/развернуть панель">◀</button>
+
+        <!-- GRAPH -->
+        <div id="graph-area">
+          <div id="add-node-area">
+            <table
+              style="
+                border-spacing: 2px;
+                font-size: 11px;
+                color: var(--text-secondary);
+                white-space: nowrap;
+              "
+            >
+              <tr>
+                <td
+                  style="
+                    text-align: right;
+                    vertical-align: middle;
+                    padding-right: 4px;
+                  "
+                >
+                  "+" в Гант
+                </td>
+                <td align="center">
+                  <input
+                    type="checkbox"
+                    id="gantt-def-rect"
+                    checked
+                    title="Гант по умолчанию"
+                  />
+                </td>
+                <td align="center">
+                  <input
+                    type="checkbox"
+                    id="gantt-def-rnd"
+                    checked
+                    title="Гант по умолчанию"
+                  />
+                </td>
+                <td align="center">
+                  <input
+                    type="checkbox"
+                    id="gantt-def-dia"
+                    title="Гант по умолчанию"
+                  />
+                </td>
+                <td align="center">
+                  <input
+                    type="checkbox"
+                    id="gantt-def-cir"
+                    checked
+                    title="Гант по умолчанию"
+                  />
+                </td>
+                <td align="center">
+                  <input
+                    type="checkbox"
+                    id="gantt-def-sta"
+                    checked
+                    title="Гант по умолчанию"
+                  />
+                </td>
+                <td align="center">
+                  <input
+                    type="checkbox"
+                    id="gantt-def-hex"
+                    checked
+                    title="Гант по умолчанию"
+                  />
+                </td>
+                <td align="center">
+                  <input
+                    type="checkbox"
+                    id="gantt-def-par"
+                    checked
+                    title="Гант по умолчанию"
+                  />
+                </td>
+              </tr>
+              <tr>
+                <td></td>
+                <td>
+                  <button
+                    class="shape-btn"
+                    onmousedown="startDragNewNode(event, 'rect')"
+                    title="Прямоугольник"
+                  >
+                    <svg viewBox="0 0 30 30">
+                      <rect
+                        x="2"
+                        y="5"
+                        width="26"
+                        height="20"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      />
+                      <text
+                        x="15"
+                        y="19"
+                        text-anchor="middle"
+                        font-size="14"
+                        fill="currentColor"
+                      >
+                        +
+                      </text>
+                    </svg>
+                  </button>
+                </td>
+                <td>
+                  <button
+                    class="shape-btn"
+                    onmousedown="startDragNewNode(event, 'rnd')"
+                    title="Скруглённый"
+                  >
+                    <svg viewBox="0 0 30 30">
+                      <rect
+                        x="2"
+                        y="5"
+                        width="26"
+                        height="20"
+                        rx="5"
+                        ry="5"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      />
+                      <text
+                        x="15"
+                        y="19"
+                        text-anchor="middle"
+                        font-size="14"
+                        fill="currentColor"
+                      >
+                        +
+                      </text>
+                    </svg>
+                  </button>
+                </td>
+                <td>
+                  <button
+                    class="shape-btn"
+                    onmousedown="startDragNewNode(event, 'dia')"
+                    title="Ромб"
+                  >
+                    <svg viewBox="0 0 30 30">
+                      <polygon
+                        points="15,2 28,15 15,28 2,15"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      />
+                      <text
+                        x="15"
+                        y="19"
+                        text-anchor="middle"
+                        font-size="14"
+                        fill="currentColor"
+                      >
+                        +
+                      </text>
+                    </svg>
+                  </button>
+                </td>
+                <td>
+                  <button
+                    class="shape-btn"
+                    onmousedown="startDragNewNode(event, 'cir')"
+                    title="Круг"
+                  >
+                    <svg viewBox="0 0 30 30">
+                      <circle
+                        cx="15"
+                        cy="15"
+                        r="13"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      />
+                      <text
+                        x="15"
+                        y="19"
+                        text-anchor="middle"
+                        font-size="14"
+                        fill="currentColor"
+                      >
+                        +
+                      </text>
+                    </svg>
+                  </button>
+                </td>
+                <td>
+                  <button
+                    class="shape-btn"
+                    onmousedown="startDragNewNode(event, 'sta')"
+                    title="Стадиум"
+                  >
+                    <svg viewBox="0 0 30 30">
+                      <rect
+                        x="2"
+                        y="8"
+                        width="26"
+                        height="14"
+                        rx="7"
+                        ry="7"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      />
+                      <text
+                        x="15"
+                        y="20"
+                        text-anchor="middle"
+                        font-size="12"
+                        fill="currentColor"
+                      >
+                        +
+                      </text>
+                    </svg>
+                  </button>
+                </td>
+                <td>
+                  <button
+                    class="shape-btn"
+                    onmousedown="startDragNewNode(event, 'hex')"
+                    title="Шестиугольник"
+                  >
+                    <svg viewBox="0 0 30 30">
+                      <polygon
+                        points="8,4 22,4 28,15 22,26 8,26 2,15"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      />
+                      <text
+                        x="15"
+                        y="20"
+                        text-anchor="middle"
+                        font-size="12"
+                        fill="currentColor"
+                      >
+                        +
+                      </text>
+                    </svg>
+                  </button>
+                </td>
+                <td>
+                  <button
+                    class="shape-btn"
+                    onmousedown="startDragNewNode(event, 'par')"
+                    title="Параллелограмм"
+                  >
+                    <svg viewBox="0 0 30 30">
+                      <polygon
+                        points="8,6 28,6 22,24 2,24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      />
+                      <text
+                        x="15"
+                        y="20"
+                        text-anchor="middle"
+                        font-size="12"
+                        fill="currentColor"
+                      >
+                        +
+                      </text>
+                    </svg>
+                  </button>
+                </td>
+                <td>
+                  <button
+                    class="shape-btn"
+                    onmousedown="startDragNewNode(event, 'note')"
+                    title="Заметка"
+                  >
+                    <svg viewBox="0 0 30 30">
+                      <rect
+                        x="2"
+                        y="5"
+                        width="26"
+                        height="20"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      />
+                      <path d="M22,5 L28,5 L28,11 Z" fill="currentColor" opacity="0.3" />
+                      <text
+                        x="15"
+                        y="19"
+                        text-anchor="middle"
+                        font-size="14"
+                        font-weight="bold"
+                        fill="currentColor"
+                      >
+                        A
+                      </text>
+                    </svg>
+                  </button>
+                </td>
+              </tr>
+            </table>
+            <input
+              type="file"
+              id="import-subgraph-input"
+              accept=".json"
+              style="display: none"
+              onchange="importSubgraphFile(event)"
+            />
+          </div>
+          <div id="selection-info"></div>
+          <div id="instructions-panel" class="instruction-collapsed">
+            <button
+              id="btn-instruction-toggle"
+              onclick="toggleInstructions()"
+              title="Справка"
+            >
+              i
+            </button>
+            <div id="instruction-content">
+              <b
+                style="
+                  color: var(--text-primary);
+                  font-size: 12px;
+                  display: block;
+                  margin-bottom: 6px;
+                  margin-right: 20px;
+                "
+                >Как пользоваться:</b
+              >
+              <div
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  gap: 6px;
+                  margin-top: 8px;
+                "
+              >
+                <div>
+                  • Добавляйте блоки кликом или перетаскиванием с панели.
+                </div>
+                <div>
+                  • Клонируйте блоки, перетаскивая их с зажатой клавишей
+                  <kbd>Ctrl</kbd>.
+                </div>
+                <div>
+                  • Выделите несколько блоков (<kbd>Shift</kbd> + клик) и
+                  нажмите "Сабграф" для их объединения.
+                </div>
+                <div>
+                  • Кнопка "Из файла" добавит другую рабочую область как
+                  сабграф.
+                </div>
+                <div>
+                  • Вы можете включить или отключить отображение блока в
+                  диаграмме Ганта в его свойствах, или задать поведение по
+                  умолчанию чекбоксами возле кнопок добавления блоков.
+                </div>
+                <div>
+                  • Шестерёнка у блока открывает окно свойств, прикреплённое к
+                  блоку: сроки выполнения задачи и подзадач, примечание,
+                  задачи, цвет и переключатель учёта просроченности.
+                </div>
+                <div>
+                  • Скрепка (📎) в свойствах блока и в шестерёнке позволяет
+                  прикреплять локальные файлы: клик по ссылке открывает файл
+                  системным приложением, а для файлов, поддерживаемых Chromium,
+                  доступен просмотр прямо в окне программы. Можно также
+                  перетащить файл из проводника на блок (добавится вложение) или
+                  на пустое место (создастся заметка с вложением).
+                </div>
+                <div>
+                  • Заморозка связей (кнопка ❄ на связи или в свойствах
+                  связи): зависимая задача двигается вместе с источником по
+                  времени (при переносе и при изменении начала/конца задачи),
+                  а также при переносе строк в Ганте; замороженные связи
+                  выделены голубым цветом.
+                </div>
+                <div>
+                  • В Ганте выделяйте несколько строк клавишами
+                  <kbd>Ctrl</kbd> (переключение) и <kbd>Shift</kbd> (диапазон)
+                  — выделенные строки переносятся вместе как по вертикали
+                  (за название строки), так и по времени (за полосу задачи).
+                </div>
+                <div>
+                  • Кнопка «Даты / у.е.» переключает ось времени на условные
+                  единицы — для алгоритмов с условными длительностями.
+                </div>
+                <div>
+                  • Заметки можно свернуть до корешка кнопкой слева от заметки:
+                  корешок появляется в левом верхнем углу заметки, и входящие
+                  связи привязываются к этому же углу (кликом по свёрнутому
+                  корешку заметка разворачивается обратно).
+                </div>
+              </div>
+            </div>
+          </div>
+          <div id="zoom-controls">
+            <button onclick="zoomGraph(1.2)" title="Увеличить">+</button>
+            <span id="zoom-level">100%</span>
+            <button onclick="zoomGraph(0.8)" title="Уменьшить">−</button>
+            <button onclick="resetZoom()" title="Сброс">⟲</button>
+            <button
+              id="btn-grid-snap"
+              onclick="toggleGridSnap()"
+              title="Привязка к сетке"
+              style="color: var(--accent); border-color: var(--accent)"
+            >
+              ▦
+            </button>
+            <button
+              id="btn-magnetic"
+              onclick="toggleMagneticAlign()"
+              title="Магнитное выравнивание"
+              style="color: var(--accent); border-color: var(--accent)"
+            >
+              🧲
+            </button>
+          </div>
+          <svg id="graph-svg" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <marker
+                id="arrow-default"
+                markerWidth="10"
+                markerHeight="7"
+                refX="9"
+                refY="3.5"
+                orient="auto"
+              >
+                <polygon points="0 0, 10 3.5, 0 7" fill="var(--edge-color)" />
+              </marker>
+              <marker
+                id="arrow-hl-0"
+                markerWidth="10"
+                markerHeight="7"
+                refX="9"
+                refY="3.5"
+                orient="auto"
+              >
+                <polygon points="0 0, 10 3.5, 0 7" fill="#ff6b6b" />
+              </marker>
+              <marker
+                id="arrow-hl-1"
+                markerWidth="10"
+                markerHeight="7"
+                refX="9"
+                refY="3.5"
+                orient="auto"
+              >
+                <polygon points="0 0, 10 3.5, 0 7" fill="#ffd93d" />
+              </marker>
+              <marker
+                id="arrow-hl-2"
+                markerWidth="10"
+                markerHeight="7"
+                refX="9"
+                refY="3.5"
+                orient="auto"
+              >
+                <polygon points="0 0, 10 3.5, 0 7" fill="#6bcb77" />
+              </marker>
+              <marker
+                id="arrow-hl-3"
+                markerWidth="10"
+                markerHeight="7"
+                refX="9"
+                refY="3.5"
+                orient="auto"
+              >
+                <polygon points="0 0, 10 3.5, 0 7" fill="#4d96ff" />
+              </marker>
+              <marker
+                id="arrow-hl-4"
+                markerWidth="10"
+                markerHeight="7"
+                refX="9"
+                refY="3.5"
+                orient="auto"
+              >
+                <polygon points="0 0, 10 3.5, 0 7" fill="#ff6bd6" />
+              </marker>
+              <marker
+                id="arrow-rev-default"
+                markerWidth="10"
+                markerHeight="7"
+                refX="1"
+                refY="3.5"
+                orient="auto"
+              >
+                <polygon points="10 0, 0 3.5, 10 7" fill="var(--edge-color)" />
+              </marker>
+              <marker
+                id="arrow-rev-hl-0"
+                markerWidth="10"
+                markerHeight="7"
+                refX="1"
+                refY="3.5"
+                orient="auto"
+              >
+                <polygon points="10 0, 0 3.5, 10 7" fill="#ff6b6b" />
+              </marker>
+              <marker
+                id="arrow-rev-hl-1"
+                markerWidth="10"
+                markerHeight="7"
+                refX="1"
+                refY="3.5"
+                orient="auto"
+              >
+                <polygon points="10 0, 0 3.5, 10 7" fill="#ffd93d" />
+              </marker>
+              <marker
+                id="arrow-rev-hl-2"
+                markerWidth="10"
+                markerHeight="7"
+                refX="1"
+                refY="3.5"
+                orient="auto"
+              >
+                <polygon points="10 0, 0 3.5, 10 7" fill="#6bcb77" />
+              </marker>
+              <marker
+                id="arrow-rev-hl-3"
+                markerWidth="10"
+                markerHeight="7"
+                refX="1"
+                refY="3.5"
+                orient="auto"
+              >
+                <polygon points="10 0, 0 3.5, 10 7" fill="#4d96ff" />
+              </marker>
+              <marker
+                id="arrow-rev-hl-4"
+                markerWidth="10"
+                markerHeight="7"
+                refX="1"
+                refY="3.5"
+                orient="auto"
+              >
+                <polygon points="10 0, 0 3.5, 10 7" fill="#ff6bd6" />
+              </marker>
+            </defs>
+            <g id="graph-viewport">
+              <g id="subgraphs-layer"></g>
+              <g id="edges-layer"></g>
+              <g id="nodes-layer"></g>
+              <g id="edge-controls-layer"></g>
+              <g id="ghost-layer"></g>
+              <g id="snap-guides-layer"></g>
+            </g>
+          </svg>
+        </div>
+
+        <!-- RIGHT PANEL -->
+        <div id="right-panel-wrapper">
+          <div id="right-panel-resize"></div>
+          <div id="right-panel">
+          <h3>Свойства</h3>
+          <div
+            id="panel-no-selection"
+            class="panel-section"
+            style="color: var(--text-muted); font-size: 12px"
+          >
+            Выберите элемент для редактирования
+          </div>
+          <div id="panel-node-props" style="display: none">
+            <div class="panel-section">
+              <label>Название</label>
+              <input
+                id="prop-name"
+                type="text"
+                oninput="updatePropName(this.value)"
+              />
+            </div>
+            <div class="panel-section">
+              <label>Форма</label>
+              <select id="prop-shape" onchange="updatePropShape(this.value)">
+                <option value="rect">Прямоугольник</option>
+                <option value="rnd">Скруглённый</option>
+                <option value="dia">Ромб</option>
+                <option value="cir">Круг</option>
+                <option value="sta">Стадиум</option>
+                <option value="hex">Шестиугольник</option>
+                <option value="par">Параллелограмм</option>
+                <option value="note">Заметка</option>
+              </select>
+            </div>
+            <div class="panel-section">
+              <label
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 6px;
+                  margin-bottom: 8px;
+                "
+                >Линия Ганта
+                <input
+                  type="checkbox"
+                  id="prop-in-gantt"
+                  onchange="updatePropInGantt(this.checked)"
+                  title="Отображать в диаграмме Ганта"
+                  style="width: 14px; height: 14px; cursor: pointer"
+              /></label>
+              <div class="highlight-colors" id="prop-gantt-colors"></div>
+            </div>
+            <div id="color-sync-row" style="display:flex;align-items:center;justify-content:center;position:relative;height:0;z-index:5;">
+              <button id="color-sync-btn" onclick="toggleColorSync()" title="Синхронизация цветов Ганта и блока" style="position:relative;top:-1px;background:var(--accent-bg);color:var(--text-primary);border:1px solid var(--accent);border-radius:10px;padding:1px 10px;cursor:pointer;font-size:10px;display:flex;align-items:center;gap:3px;z-index:6;">
+                <span id="color-sync-icon">🔗</span> Синхр.
+              </button>
+            </div>
+            <div class="panel-section">
+              <label>Выделение цветом</label>
+              <div class="highlight-colors" id="highlight-colors"></div>
+            </div>
+            <div class="panel-section" id="prop-overdue-section">
+              <label>Просроченность</label>
+              <button id="prop-track-overdue-btn" class="panel-toggle-btn" onclick="togglePropOverdue()" title="Отслеживание просроченности: если дата окончания задачи прошла, текст в блоке выделяется красным, а в канбан на карточке появляется красный &quot;!&quot;. В режиме условных единиц времени (у.е.) отключается.">⏰ Не отслеживается</button>
+            </div>
+            <div class="panel-section">
+              <label>Примечание</label>
+              <textarea
+                id="prop-note"
+                oninput="updatePropNote(this.value)"
+              ></textarea>
+            </div>
+            <div class="panel-section">
+              <label>Задачи (To-Do)</label>
+              <div id="prop-todo-list"></div>
+              <button class="add-todo-btn" onclick="addTodoToSelected()">
+                + Добавить задачу
+              </button>
+            </div>
+            <div class="panel-section" id="prop-attachments-section" style="display: none">
+              <label>Вложения</label>
+              <div id="prop-attachments-list" style="max-height: 200px; overflow-y: auto"></div>
+              <button
+                class="add-attachment-btn"
+                id="btn-add-attachment-panel"
+                onclick="openAttachmentModalFromPanel()"
+                title="Добавить ссылку на локальный файл"
+              >
+                📎 Добавить вложение
+              </button>
+            </div>
+          </div>
+          <div id="panel-edge-props" style="display: none">
+            <div class="panel-section">
+              <label>Примечание связи (двойной клик на связи)</label>
+              <input
+                id="edge-label-input"
+                type="text"
+                oninput="updateEdgeLabel(this.value)"
+              />
+            </div>
+            <div class="panel-section">
+              <label>Стрелка (начало)</label>
+              <select id="edge-arrow-start" onchange="updateEdgeArrows()">
+                <option value="none">Нет</option>
+                <option value="arrow">Стрелка</option>
+              </select>
+            </div>
+            <div class="panel-section">
+              <label>Стрелка (конец)</label>
+              <select id="edge-arrow-end" onchange="updateEdgeArrows()">
+                <option value="none">Нет</option>
+                <option value="arrow">Стрелка</option>
+              </select>
+            </div>
+            <div class="panel-section">
+              <label>Заморозка (Гант)</label>
+              <button id="edge-freeze-btn" class="panel-toggle-btn" onclick="toggleEdgeFreeze()" title="Заморозить зависимую задачу: её строка в диаграмме Ганта двигается вместе с задачей-источником (по времени и при переносе строк). В файле сохранения хранится как необязательный флаг freeze у связи.">❄ Не заморожена</button>
+            </div>
+          </div>
+          <div id="panel-subgraph-props" style="display: none">
+            <div class="panel-section">
+              <label>Название сабграфа</label>
+              <input
+                id="subgraph-name"
+                type="text"
+                oninput="updateSubgraphName(this.value)"
+              />
+            </div>
+            <div class="panel-section">
+              <label>Линия Ганта (перекрывает)</label>
+              <div class="highlight-colors" id="subgraph-gantt-colors"></div>
+            </div>
+            <div class="panel-section">
+              <label>Ноды в сабграфе</label>
+              <div
+                id="subgraph-nodes-list"
+                style="font-size: 11px; color: var(--text-secondary)"
+              ></div>
+            </div>
+            <div class="panel-section">
+              <label>Выделение цветом</label>
+              <div
+                class="highlight-colors"
+                id="subgraph-highlight-colors"
+              ></div>
+            </div>
+          </div>
+          <div id="panel-ws-props" style="display: none">
+            <div class="panel-section">
+              <label>Настройки рабочего пространства</label>
+            </div>
+          </div>
+          <div class="panel-section" style="margin-top: auto">
+            <h3 style="border: none; padding: 0 0 6px">
+              Управление выделениями
+            </h3>
+            <div id="highlight-manager"></div>
+          </div>
+          <div id="global-todos-section">
+            <div id="global-todos-header" onclick="toggleGlobalTodos()">
+              <span>📋 Невыполненные задачи</span>
+              <span id="global-todos-toggle">▼</span>
+            </div>
+            <div id="global-todos-list"></div>
+          </div>
+          </div>
+        </div>
+        <button id="right-panel-collapse-btn" onclick="toggleRightPanel()" title="Свернуть/развернуть панель">▶</button>
+      </div>
+
+      <!-- GANTT PANEL -->
+      <div id="gantt-panel" style="height: 280px">
+        <div id="gantt-resize"></div>
+        <button id="gantt-toggle">▼ Диаграмма Ганта ▼</button>
+        <div id="gantt-content">
+          <div id="gantt-header">
+            <button id="gantt-mode-btn" onclick="toggleGanttTimeMode()" title="Переключение оси времени: календарные даты или условные единицы времени (у.е.) — для алгоритмов, где важна только последовательность и условные длительности">📅 Даты</button>
+            <label id="gantt-start-label">Начало:</label>
+            <input id="gantt-start" type="date" />
+            <label id="gantt-end-label">Конец:</label>
+            <input id="gantt-end" type="date" />
+            <button onclick="ganttZoom(1.2)">🔍+</button>
+            <button onclick="ganttZoom(0.8)">🔍−</button>
+            <button onclick="ganttFit()">По ширине</button>
+            <div style="flex: 1"></div>
+            <button
+              id="gantt-bookmark-btn"
+              onclick="addGanttBookmark()"
+              title="Добавить закладку (веху)"
+              style="display: flex; align-items: center; gap: 4px"
+            >
+              <span style="font-size: 12px">📌</span> Закладка
+            </button>
+          </div>
+          <div id="gantt-body">
+            <canvas id="gantt-canvas"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- KANBAN VIEW -->
+      <div id="kanban-view">
+        <div id="kanban-calendar"></div>
+        <div id="kanban-calendar-resizer"></div>
+        <div id="kanban-columns-area"></div>
+      </div>
+    </div>
+
+    <!-- NOTE POPUP -->
+    <div id="note-popup">
+      <button class="note-popup-close" onclick="closeNotePopup()">✕</button>
+      <div class="note-popup-title"></div>
+      <div class="note-popup-body"></div>
+      <div style="display: flex; gap: 4px; margin-top: 6px">
+        <button class="note-popup-edit" onclick="editNoteFromPopup()">
+          ✎ Редактировать
+        </button>
+        <button class="note-popup-add-todo" onclick="addTodoFromPopup()">
+          + Задача
+        </button>
+      </div>
+    </div>
+
+    <!-- CONTEXT MENU -->
+    <div id="context-menu"></div>
+
+    <!-- JSON EDITOR MODAL -->
+    <div id="json-editor-overlay">
+      <div id="json-editor-modal">
+        <div class="je-header">
+          <h3>JSON Редактор</h3>
+          <select id="je-snapshot-select"></select>
+        </div>
+        <div class="je-body">
+          <div class="je-single" id="je-single-view">
+            <textarea id="je-textarea" spellcheck="false"></textarea>
+          </div>
+          <div class="je-diff" id="je-diff-view" style="display:none;">
+            <div class="je-diff-panel" id="je-diff-left"></div>
+            <div class="je-diff-panel" id="je-diff-right"></div>
+          </div>
+        </div>
+        <div class="je-footer">
+          <span id="json-editor-error"></span>
+          <button class="je-btn-restore" id="je-restore-btn" style="display:none;">Восстановить версию</button>
+          <button class="je-btn-secondary" id="je-cancel-btn">Отмена</button>
+          <button class="je-btn-primary" id="je-apply-btn">Применить</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI SETTINGS MODAL -->
+    <div id="ai-settings-overlay">
+      <div id="ai-settings-modal">
+        <h3>Настройки подключения к нейросети</h3>
+        <div class="ai-settings-field">
+          <label>Адрес сервера (API Base URL)</label>
+          <input id="ai-api-url" type="text" placeholder="http://localhost:1234/v1" />
+        </div>
+        <div class="ai-settings-field">
+          <label>API Ключ (опционально)</label>
+          <input id="ai-api-key" type="password" placeholder="sk-..." />
+        </div>
+        <div class="ai-settings-field">
+          <button id="ai-fetch-models-btn" class="ai-settings-btn-primary" style="width:auto;padding:6px 16px;border-radius:4px;cursor:pointer;font-size:12px;">Загрузить список моделей</button>
+          <div id="ai-fetch-status" class="ai-settings-status"></div>
+        </div>
+        <div class="ai-settings-field">
+          <label>Основная модель (чат)</label>
+          <select id="ai-model-chat"><option value="">-- выберите модель --</option></select>
+        </div>
+        <div class="ai-settings-field">
+          <label>Embedding модель (для будущих функций)</label>
+          <select id="ai-model-embed"><option value="">-- выберите модель --</option></select>
+        </div>
+        <div class="ai-settings-actions">
+          <button class="ai-settings-btn-secondary" id="ai-settings-cancel">Закрыть</button>
+          <button class="ai-settings-btn-primary" id="ai-settings-save">Сохранить</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RAW RESPONSE VIEWER MODAL -->
+    <div id="raw-response-overlay" tabindex="-1">
+      <div id="raw-response-modal">
+        <div class="raw-header">
+          <h3>Сырой ответ нейросети</h3>
+          <button class="raw-close-btn" id="raw-response-close">✕</button>
+        </div>
+        <textarea id="raw-response-text" readonly></textarea>
+      </div>
+    </div>
+
+    <!-- HIDDEN FILE INPUT -->
+    <input id="file-input" type="file" accept=".json" style="display: none" />
+
+    <!-- DROP ZONE MODAL -->
+    <div id="drop-zone-modal">
+      <div class="dz-modal-box">
+        <h3>📂 Импорт JSON файла</h3>
+        <div class="dz-btns">
+          <button class="dz-btn-open" id="dz-btn-open">Открыть как новое рабочее пространство</button>
+          <button class="dz-btn-subgraph" id="dz-btn-subgraph">Добавить как сабграф</button>
+          <button class="dz-btn-cancel" id="dz-btn-cancel">Отмена</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <script src="app.js"></script>
+
+    <script src="electron-integration.js"></script>
+
+    <script src="attachments.js"></script>
+  </body>
+</html>

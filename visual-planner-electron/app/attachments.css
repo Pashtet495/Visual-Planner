@@ -1,0 +1,324 @@
+/* ============================================================
+   Visual Planner - attachments UI (Electron)
+   ============================================================ */
+
+/* ---------- Drop target highlight ---------- */
+.node-group.attachment-drop-target {
+  filter: drop-shadow(0 0 8px var(--accent));
+}
+.node-group.attachment-drop-target > rect,
+.node-group.attachment-drop-target > polygon,
+.node-group.attachment-drop-target > circle {
+  stroke: var(--accent);
+  stroke-width: 2.5;
+}
+.kanban-card.attachment-drop-target {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  box-shadow: 0 0 10px var(--accent);
+}
+
+/* ---------- Generic overlay / buttons ---------- */
+.vp-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+}
+
+.vp-btn {
+  padding: 6px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+.vp-btn:hover {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+}
+.vp-btn-primary {
+  background: var(--accent-bg);
+  border-color: var(--accent);
+}
+.vp-btn-primary:hover {
+  background: var(--accent-bg-hover);
+}
+.vp-btn-secondary {
+  background: var(--bg-tertiary);
+}
+
+/* ---------- Add / edit attachment modal ---------- */
+.vp-attach-modal {
+  width: 460px;
+  max-width: 92vw;
+  background: var(--modal-bg);
+  border: 1px solid var(--border-hover);
+  border-radius: 8px;
+  box-shadow: 0 8px 28px var(--shadow);
+  color: var(--text-primary);
+  display: flex;
+  flex-direction: column;
+  padding: 14px 16px;
+  box-sizing: border-box;
+}
+.vp-attach-header {
+  font-size: 14px;
+  font-weight: bold;
+  margin-bottom: 10px;
+  color: var(--text-primary);
+}
+.vp-attach-hint {
+  font-size: 11px;
+  color: var(--text-secondary);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 6px 8px;
+  margin-bottom: 10px;
+  line-height: 1.4;
+}
+.vp-attach-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+.vp-attach-field label {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+.vp-attach-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  border-radius: 4px;
+  padding: 5px 8px;
+  font-size: 12px;
+  outline: none;
+}
+.vp-attach-input:focus {
+  border-color: var(--accent);
+}
+.vp-attach-input.vp-input-error {
+  border-color: var(--todo-pending);
+}
+.vp-attach-comment {
+  resize: vertical;
+  min-height: 54px;
+  font-family: inherit;
+}
+.vp-attach-path-row {
+  display: flex;
+  gap: 6px;
+}
+.vp-attach-path-row .vp-attach-input {
+  flex: 1;
+  font-family: monospace;
+}
+.vp-attach-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+/* ---------- Attachment rows ---------- */
+.vp-att-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.vp-att-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 4px 6px;
+  font-size: 12px;
+  flex-wrap: wrap;
+}
+.vp-att-row:hover {
+  border-color: var(--border-hover);
+}
+.vp-att-name {
+  color: var(--accent);
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  flex: 1;
+  min-width: 60px;
+  word-break: break-word;
+  line-height: 1.3;
+}
+.vp-att-name:hover {
+  text-decoration-color: var(--accent);
+}
+.vp-att-comment {
+  flex-basis: 100%;
+  font-size: 10px;
+  color: var(--text-muted);
+  line-height: 1.3;
+  padding-left: 2px;
+}
+.vp-att-btns {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+}
+.vp-att-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 2px 3px;
+  line-height: 1;
+  border-radius: 3px;
+}
+.vp-att-btn:hover {
+  color: var(--accent);
+  background: var(--accent-bg);
+}
+.vp-att-btn-danger:hover {
+  color: #ffffff;
+  background: var(--todo-pending);
+}
+.vp-att-empty {
+  font-size: 11px;
+  color: var(--text-muted);
+  padding: 2px 0;
+}
+.vp-att-add-btn {
+  margin-left: 0;
+}
+
+/* Right panel "add attachment" button */
+.add-attachment-btn {
+  margin-top: 6px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  border-radius: 4px;
+  padding: 5px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.add-attachment-btn:hover {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+}
+
+/* Paperclip button in the block popup header */
+.note-popup-attach-btn {
+  position: absolute;
+  top: 6px;
+  right: 28px;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 2px 4px;
+  line-height: 1;
+  border-radius: 3px;
+  z-index: 2;
+}
+.note-popup-attach-btn:hover {
+  color: var(--accent);
+  background: var(--accent-bg);
+}
+
+/* ---------- Internal viewer modal ---------- */
+.vp-viewer-overlay {
+  z-index: 10050;
+  background: rgba(0, 0, 0, 0.7);
+}
+.vp-viewer-modal {
+  width: 84vw;
+  height: 88vh;
+  max-width: 1400px;
+  background: var(--modal-bg);
+  border: 1px solid var(--border-hover);
+  border-radius: 8px;
+  box-shadow: 0 10px 40px var(--shadow);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+.vp-viewer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+}
+.vp-viewer-title-wrap {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.vp-viewer-title {
+  font-size: 14px;
+  font-weight: bold;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.vp-viewer-path {
+  font-size: 10px;
+  font-family: monospace;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.vp-viewer-close {
+  background: none;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  line-height: 1;
+}
+.vp-viewer-close:hover {
+  color: #fff;
+  background: var(--todo-pending);
+  border-color: var(--todo-pending);
+}
+.vp-viewer-frame {
+  flex: 1;
+  width: 100%;
+  border: none;
+  background: #ffffff;
+}
+.vp-viewer-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 10px 14px;
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+}
